@@ -1,0 +1,26 @@
+version: "2"
+services:
+  db:
+    image: mysql:8
+    container_name: "mysql"
+    volumes:
+      - ./mysql:/docker-entrypoint-initdb.d
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=SCHEMASPY_DATABASE
+    ports:
+      - 3306:3306
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 -u root -proot || exit 1
+  schemaspy:
+    build:
+      context: .
+    container_name: "schemaspy"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - ./output:/output
+    depends_on:
+      db:
+        condition: service_healthy
+    command: -t mysql -host db:3306 -db SCHEMASPY_DATABASE -u root -p root -s SCHEMASPY_DATABASE
